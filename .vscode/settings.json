@@ -1,0 +1,18 @@
+{
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar",
+    "/Applications/Processing.app/Contents/Java/ant-launcher.jar",
+    "/Applications/Processing.app/Contents/Java/ant.jar",
+    "/Applications/Processing.app/Contents/Java/core.jar",
+    "/Applications/Processing.app/Contents/Java/flatlaf.jar",
+    "/Applications/Processing.app/Contents/Java/jna-platform.jar",
+    "/Applications/Processing.app/Contents/Java/jna.jar",
+    "/Applications/Processing.app/Contents/Java/pde.jar",
+    "/Users/adam1/Documents/Processing/libraries/**/*.jar"
+  ],
+  "java.project.explorer.showNonJavaResources": false,
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
