@@ -51,6 +51,8 @@ import java.io.FilenameFilter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import com.bouzou.packages.giantspacerobotvisualizer.PostProcessingShaders.*;
+
 // import spout.*;
 
 public class GiantSpaceRobotVisualizer extends PApplet {
@@ -174,7 +176,8 @@ public class GiantSpaceRobotVisualizer extends PApplet {
 
   public void settings() {
     // load the screen definition from the config file
-    JSONObject j = loadJSONObject("config.json");
+    File jsonFile = new File(resourcesDir("config.json"));
+    JSONObject j = loadJSONObject(jsonFile);
 
     // load MIDI channel info from config.json
     JSONArray d = j.getJSONArray("screensize");
@@ -229,16 +232,16 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     // * Set up shaders *
     // ******************
 
+    // set up a list of shaders used for post processing effects
+    VisShaders = new PostProcessingShaders(this);
+    
     // Add a kaleidoscope effect to the entire display
-    shaderKaleidoscope = new ShaderKaleidoscope();
+    shaderKaleidoscope = VisShaders.new ShaderKaleidoscope(this);
 
     // Shaders used to represet effects used in Traktor
-    shaderVhs_glitch = new ShaderVHSGlitch(); // represents slicer, masher and gater
-    shaderSobel = new ShaderSobel(); // reresents echo
+    shaderVhs_glitch = VisShaders.new ShaderVHSGlitch(this); // represents slicer, masher and gater
+    shaderSobel = VisShaders.new ShaderSobel(this); // reresents echo
     shaderBlur = new BlurShader(); // represents filter (or deck FX)
-
-    // set up a list of shaders used for post processing effects
-    VisShaders = new PostProcessingShaders();
 
     // Set up visualisers
     visWaveform = new VisWaveform("Waveform");
@@ -385,7 +388,8 @@ public class GiantSpaceRobotVisualizer extends PApplet {
   }
 
   void loadConfig() {
-    json = loadJSONObject("config.json");
+    File jsonFile = new File(resourcesDir("config.json"));
+    json = loadJSONObject(jsonFile);
 
     loadMidiDevice();
     loadMidiChannel();
@@ -450,7 +454,7 @@ public class GiantSpaceRobotVisualizer extends PApplet {
   // *******************************************
 
   void loadWordPacks() {
-    beatWords = new WordPacks();
+    beatWords = new WordPacks(this, myBgPalette, font);
 
     JSONArray wordData = json.getJSONArray("wordpacks");
 
@@ -1476,272 +1480,6 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     }
   }
 
-  // A class to store a set of shaders used as "post processing" effects
-  // they may have different parameters, these can be set using two faders on the
-  // Maschine Jam
-  class PostProcessingShaders {
-    ArrayList<VisShader> VisShaders;
-    VisShader currentVisShader;
-    boolean VisShadersOn;
-    int x;
-    int y;
-
-    PostProcessingShaders() {
-      VisShaders = new ArrayList<VisShader>();
-      VisShaders.add(shaderBrcosa = new ShaderBrcosa());
-      VisShaders.add(shaderHue = new ShaderHue());
-      VisShaders.add(shaderPixelate = new ShaderPixelate());
-      VisShaders.add(shaderChannels = new ShaderChannels());
-      VisShaders.add(shaderThreshold = new ShaderThreshold());
-      VisShaders.add(shaderNeon = new ShaderNeon());
-      VisShaders.add(shaderDeform = new ShaderDeform());
-      VisShaders.add(shaderPixelrolls = new ShaderPixelRolls());
-      VisShaders.add(shaderModcolor = new ShaderModcolor());
-      VisShaders.add(shaderHalftone = new ShaderHalftone());
-      VisShaders.add(shaderInvert = new ShaderInvert());
-
-      currentVisShader = VisShaders.get(0);
-      x = width / 2;
-      y = height / 2;
-      VisShadersOn = false;
-    }
-
-    void draw() {
-      if (VisShadersOn) {
-        currentVisShader.draw();
-      }
-    }
-
-    void setShader(int value) {
-      if (value >= VisShaders.size()) {
-        value = 0;
-      }
-      currentVisShader = VisShaders.get(value);
-    }
-
-    String getCurrentShaderInfo() {
-      return currentVisShader.name + " X = " + x + " Y = " + y;
-    }
-
-    void setX(int value) {
-      x = round(map(value, 0, 127, 0, width));
-      currentVisShader.setX(x);
-    }
-
-    void setY(int value) {
-      y = round(map(value, 0, 127, 0, height));
-      currentVisShader.setY(y);
-    }
-
-    void toggleVisShaders() {
-      VisShadersOn = !VisShadersOn;
-    }
-  }
-
-  abstract class VisShader {
-    String name;
-    String filename;
-    boolean on;
-    PShader shade;
-    int x;
-    int y;
-
-    VisShader(String n, String f) {
-      name = n;
-      filename = f;
-      shade = loadShader(filename);
-      x = width / 2;
-      y = height / 2;
-    }
-
-    void draw() {
-      filter(shade);
-    }
-
-    void setX(int i) {
-      x = i;
-    }
-
-    void setY(int i) {
-      y = i;
-    }
-  }
-
-  class ShaderBrcosa extends VisShader {
-    ShaderBrcosa() {
-      super("brcosa", "brcosa.glsl");
-      x = width / 3;
-      y = 10;// height/3;
-      shade.set("brightness", (float) 1.0);
-    }
-
-    void draw() {
-      shade.set("contrast", map(x, 0, width, -5, 5));
-      shade.set("saturation", map(y, 0, height, -5, 5));
-      super.draw();
-    }
-  }
-
-  class ShaderHue extends VisShader {
-    ShaderHue() {
-      super("hue", "hue.glsl");
-    }
-
-    void draw() {
-      shade.set("hue", map(x, 0, width, 0, TWO_PI));
-      super.draw();
-    }
-  }
-
-  class ShaderPixelate extends VisShader {
-    ShaderPixelate() {
-      super("pixelate", "pixelate.glsl");
-    }
-
-    void draw() {
-      shade.set("pixels", (float) 0.1 * x, (float) 0.1 * x);
-      super.draw();
-    }
-  }
-
-  class ShaderChannels extends VisShader {
-    ShaderChannels() {
-      super("channels", "channels.glsl");
-    }
-
-    void draw() {
-      shade.set("rbias", (float) 0.0, (float) 0.0);
-      shade.set("gbias", map((float) y, (float) 0, (float) height, (float) -0.2, (float) 0.2), (float) 0.0);
-      shade.set("bbias", (float) 0.0, (float) 0.0);
-      shade.set("rmult", map((float) x, (float) 0, (float) width, (float) 0.8, (float) 1.5), (float) 1.0);
-      shade.set("gmult", (float) 1.0, (float) 1.0);
-      shade.set("bmult", (float) 1.0, (float) 1.0);
-      super.draw();
-    }
-  }
-
-  class ShaderThreshold extends VisShader {
-    ShaderThreshold() {
-      super("threshold", "threshold.glsl");
-    }
-
-    void draw() {
-      shade.set("threshold", map(x, 0, width, 0, 1));
-      super.draw();
-    }
-  }
-
-  class ShaderNeon extends VisShader {
-    ShaderNeon() {
-      super("neon", "neon.glsl");
-    }
-
-    void draw() {
-      shade.set("brt", map((float) x, (float) 0, (float) width, (float) 0, (float) 0.5));
-      shade.set("rad", (int) map(y, 0, height, 0, 3));
-      super.draw();
-    }
-  }
-
-  class ShaderDeform extends VisShader {
-    ShaderDeform() {
-      super("deform", "deform.glsl");
-    }
-
-    void draw() {
-      shade.set("time", (float) millis() / (float) 1000.0);
-      shade.set("mouse", (float) x / width, (float) y / height);
-      shade.set("turns", map(sin((float) 0.01 * frameCount), (float) -1, (float) 1, (float) 2.0, (float) 10.0));
-      super.draw();
-    }
-  }
-
-  class ShaderPixelRolls extends VisShader {
-    ShaderPixelRolls() {
-      super("pixelRolls", "pixelrolls.glsl");
-    }
-
-    void draw() {
-      shade.set("time", (float) millis() / (float) 1000.0);
-      shade.set("pixels", x / 5, (float) 150.0);
-      shade.set("rollRate", map(y, 0, height, (float) -0.5, (float) 0.5));
-      shade.set("rollAmount", (float) 0.25);
-      super.draw();
-    }
-  }
-
-  class ShaderModcolor extends VisShader {
-    ShaderModcolor() {
-      super("modcolor", "modcolor.glsl");
-    }
-
-    void draw() {
-      shade.set("modr", map(x, 0, width, 0, (float) 0.5));
-      shade.set("modg", (float) 0.3);
-      shade.set("modb", map(y, 0, height, 0, (float) 0.5));
-      super.draw();
-    }
-  }
-
-  class ShaderHalftone extends VisShader {
-    ShaderHalftone() {
-      super("halftone", "halftone.glsl");
-    }
-
-    void draw() {
-      shade.set("pixelsPerRow", (int) map(x, 0, width, 2, 100));
-      super.draw();
-    }
-  }
-
-  class ShaderInvert extends VisShader {
-    ShaderInvert() {
-      super("inversion", "invert.glsl");
-    }
-
-    void draw() {
-      super.draw();
-    }
-  }
-
-  class ShaderVHSGlitch extends VisShader {
-    ShaderVHSGlitch() {
-      super("VHS Glitch", "vhs_glitch.glsl");
-      shade.set("iResolution", (float) width, (float) height);
-    }
-
-    void draw() {
-      shade.set("iGlobalTime", millis() / (float) 1000.0);
-      super.draw();
-    }
-  }
-
-  class ShaderSobel extends VisShader {
-    ShaderSobel() {
-      super("Sobel", "sobel.glsl");
-      shade.set("iResolution", (float) width, (float) height);
-    }
-
-    void draw() {
-      super.draw();
-    }
-  }
-
-  class ShaderKaleidoscope extends VisShader {
-    int viewAngleMod;
-    float rot;
-
-    ShaderKaleidoscope() {
-      super("Kaleidoscope", "kaleidoscope.glsl");
-      shade.set("rotation", 0);
-      shade.set("viewAngle", TWO_PI / 10);
-    }
-
-    void draw() {
-      shader(shade);
-    }
-  }
-
   class BgPalette {
     ArrayList<int[]> palettes = new ArrayList<int[]>();
     int[] bgColors;
@@ -2694,99 +2432,21 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     }
   }
 
-  class WordPacks {
-    ArrayList<WordPack> words;
-    int currentWordPack;
-    int wordCount;
-    boolean wordsOn;
-    int wordColor;
-    int alpha;
-
-    WordPacks() {
-      words = new ArrayList<WordPack>();
-      currentWordPack = 0;
-      wordsOn = false;
-      wordCount = 0;
-      alpha = 150;
-      wordColor = color(0);
-    }
-
-    void addWords(String[] wp) {
-      words.add(new WordPack(wp));
-      wordCount = words.size();
-    }
-
-    void setCurrentPack(int midiValue) {
-      if (midiValue == 127 | midiValue == 0) {
-        unCueWord();
-      } else {
-        if (midiValue <= wordCount) {
-          currentWordPack = midiValue - 1;
-          words.get(currentWordPack).reset();
-          wordsOn = true;
-        }
-      }
-    }
-
-    void display() {
-      if (wordsOn) {
-        words.get(currentWordPack).display(alpha);
-      }
-    }
-
-    void nextWord() {
-      words.get(currentWordPack).cueWord();
-    }
-
-    void unCueWord() {
-      wordsOn = false;
-    }
-
-    void setAlpha(int a) {
-      alpha = round(map(a, 0, 127, 0, 255));
-    }
-  }
-
-  class WordPack {
-    String[] words;
-    int currentWord;
-    int wordCount;
-
-    WordPack(String[] wp) {
-      words = wp;
-      wordCount = words.length - 1;
-      currentWord = 0;
-    }
-
-    void display(int a) {
-      textAlign(CENTER, CENTER);
-      if (myBgPalette.getBlackOrWhite()) {
-        fill(0, a);
-      } else {
-        fill(255, a);
-      }
-      textFont(font, 200);
-
-      text(words[currentWord], width / 2, height / 2);
-    }
-
-    void cueWord() {
-      currentWord++;
-      if (currentWord > wordCount) {
-        currentWord = 0;
-      }
-    }
-
-    void reset() {
-      currentWord = 0;
-    }
-  }
-
   public static void main(String[] args) {
     PApplet.main("com.bouzou.packages.giantspacerobotvisualizer.GiantSpaceRobotVisualizer");
   }
 
   private static String resourcesDir(String path) {
     return "src/main/resources/" + path;
+  }
+
+  public PShader loadShader(java.lang.String fragFilename) {
+    // Call super impl with resource path
+    return super.loadShader(resourcesDir(fragFilename));
+  }
+
+  public PFont loadFont(java.lang.String filename) {
+    // Call super impl with resource path
+    return super.loadFont(resourcesDir(filename));
   }
 }

@@ -2,8 +2,8 @@
 	"screensize": [
 		{"fullscreen": "false",
 		"displaynumber":"2",
-		"width": "1024",
-		"height": "1024"}
+		"width": "1280",
+		"height": "720"}
 	],
 
 	"MIDIdevice": [
@@ -41,5 +41,5 @@
     	{"colours":["#ff0000", "#ce141e", "#ab0c3c", "#890440", "#670445"]}, 
     	{"colours":["#ff71ce", "#01cdfe", "#05ffa1", "#b967ff", "#fffb96"]}, 
     	{"colours":["#fe0000", "#fdfe02", "#0bff01", "#011efe", "#fe00f6"]} 
-    ],
+    ]
 }
