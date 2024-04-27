@@ -7,12 +7,12 @@
 	],
 
 	"MIDIdevice": [
-		{"device": "Maschine Jam - 1"},
+		{"device": "Traktor Kontrol S3"},
 		{"device": "GRVsr"}
 	] ,
 
 	"MIDIchannel":[
-		{"channel": "11"}
+		{"channel": "13"}
 	] ,
 
 	"wordpacks":[
