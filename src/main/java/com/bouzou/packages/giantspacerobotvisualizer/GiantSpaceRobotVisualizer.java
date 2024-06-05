@@ -41,19 +41,28 @@ package com.bouzou.packages.giantspacerobotvisualizer;
 
 import themidibus.*;
 import ddf.minim.*;
+import ddf.minim.javasound.JSMinim;
+import ddf.minim.spi.AudioStream;
 import processing.core.*;
 import processing.data.*;
 import processing.opengl.PShader;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+
+import javax.sound.sampled.Mixer;
 
 import com.bouzou.packages.giantspacerobotvisualizer.PostProcessingShaders.*;
 
 // import spout.*;
 
+/**
+ * The `GiantSpaceRobotVisualizer` class is the main class that represents the visualizer application for the Giant Space Robot project.
+ * It extends the `PApplet` class from the Processing library and provides the setup and draw methods for rendering the visual effects.
+ * The class also initializes audio and MIDI components, handles JSON configuration, and manages various shaders and visualizers.
+ * It supports keyboard controls for convenience if a MIDI device is not available.
+ */
 public class GiantSpaceRobotVisualizer extends PApplet {
 
   // ***********************
@@ -72,6 +81,7 @@ public class GiantSpaceRobotVisualizer extends PApplet {
   // the midi channel defaults to 11, but can be overridden via the config file
   // (Midi channel 11 is numbered 10 in MidiBus (!)
   int midiChannel = 10;
+  MidiListener midiListener;
 
   // ************************************
   // Set up JSON handler for config file
@@ -220,7 +230,13 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     // Setup Sound stuff
     // **********************
     minim = new Minim(this);
-    input = minim.getLineIn(Minim.STEREO, 1024, 48000, 16);
+    AudioSetup.listMixers();
+    JSMinim jsMinim = new JSMinim(this);
+    // TODO: get the mixer name from config file and if not set default to the first one
+    Mixer mixer = AudioSetup.getMixerByName("BlackHole 2ch");
+    AudioSetup.printMixerDetails(mixer);
+    minim.setInputMixer(mixer);
+    input = minim.getLineIn(Minim.STEREO, 1024, 44100, 16);
 
     // *********************
     // Set up text display
@@ -233,7 +249,7 @@ public class GiantSpaceRobotVisualizer extends PApplet {
 
     // set up a list of shaders used for post processing effects
     VisShaders = new PostProcessingShaders(this);
-    
+
     // Add a kaleidoscope effect to the entire display
     shaderKaleidoscope = VisShaders.new ShaderKaleidoscope(this);
 
@@ -392,6 +408,7 @@ public class GiantSpaceRobotVisualizer extends PApplet {
 
     loadMidiDevice();
     loadMidiChannel();
+    setupMidiListener();
     loadWordPacks();
     loadBackgroundPalettes();
   }
@@ -446,6 +463,38 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     }
     JSONObject m = d.getJSONObject(0);
     midiChannel = m.getInt("channel") - 1;
+  }
+
+  void setupMidiListener() {
+    midiListener = new SimpleMidiListener() {
+      public void noteOn(int channel, int pitch, int velocity) {
+        println("Note On : Channel = " + channel + " Pitch = " + pitch + " Vel = " +
+            velocity);
+      }
+
+      public void noteOff(int channel, int pitch, int velocity) {
+        println("Note Off : Channel = " + channel + " Pitch = " + pitch + " Vel = " +
+            velocity);
+      }
+
+      public void controllerChange(int channel, int number, int value) {
+        println(
+            "Control Change: Channel = " + channel + " CC" + number + " Value = " + value);
+
+        if (channel == midiChannel) {
+          try {
+            handleControllerChange(channel, number, value);
+          } catch (Exception e) {
+            println("Midi error in control change : number = " + number + ", value = " + value);
+            e.printStackTrace();
+          }
+        }
+      }
+    };
+
+    for (int i = 0; i < buses.length; i++) {
+      buses[i].addMidiListener(midiListener);
+    }
   }
 
   // *******************************************
@@ -513,28 +562,138 @@ public class GiantSpaceRobotVisualizer extends PApplet {
     return arr;
   }
 
-  void noteOn(int channel, int pitch, int velocity, long timestamp, String bus_name) {
-    println("Note On : Channel = " + channel + " Pitch = " + pitch + " Vel = "+
-    velocity);
+  void handleControllerChange(int channel, int CC, int value) {
+    DeckSettings[] decks = {deckA, deckB, deckC, deckD};
+
+    // Handle volume and filter changes in a loop
+    if ((CC >= 100 && CC <= 103) || (CC >= 105 && CC <= 108)) {
+      int deckIndex = (CC - 100) % 4; // Compute deck index based on CC value
+      if (CC < 104) {
+        decks[deckIndex].setVolume(value);
+      } else {
+        decks[deckIndex].setFilter(value);
+      }
+    } else {
+      switch (CC) {
+        case 64:
+        case 65:
+          if (CC == 64)
+            delayOn = value > 100;
+          else
+            sliceOn = value > 100;
+          break;
+        case 21:
+        case 45:
+        case 48:
+        case 52:
+        case 53:
+        case 49:
+          handleVisualizerSettings(CC, value);
+          break;
+        case 26:
+        case 29:
+          if (CC == 26)
+            waveformOn = value > 100;
+          else
+            kaleidoscopeOn = value > 100;
+          break;
+        case 50:
+        case 41:
+        case 30:
+        case 46:
+        case 47:
+          handleBackgroundAndTextSettings(CC, value);
+          break;
+        case 60:
+        case 61:
+        case 54:
+        case 55:
+          handleShaderSettings(CC, value);
+          break;
+        case 110:
+        case 111:
+        case 112:
+        case 113:
+          decks[CC - 110].setIsPlaying(value == 127);
+          break;
+        default:
+          handleHotCuesAndPacks(CC, value);
+          break;
+      }
+    }
   }
 
-  void noteOff(int channel, int pitch, int velocity, long timestamp, String bus_name) {
-    println("Note Off : Channel = " + channel + " Pitch = " + pitch + " Vel = "+
-    velocity);
+  void handleVisualizerSettings(int CC, int value) {
+    switch (CC) {
+      case 21:
+        visualisers.setVisualiser(value);
+        break;
+      case 45:
+        visualisers.setKnob1(value);
+        break;
+      case 48:
+        visualisers.setScaling(value);
+        break;
+      case 52:
+        visualisers.setFader1(value);
+        break;
+      case 53:
+        visualisers.setFader2(value);
+        break;
+      case 49:
+        visWaveform.scale(value);
+        break;
+    }
   }
 
-  void controllerChange(int channel, int number, int value, long timestamp, String bus_name) {
-    println("Control Change: Channel = " + channel + " CC" + number + " Value = " + value + " bus name = " + bus_name);
+  void handleBackgroundAndTextSettings(int CC, int value) {
+    switch (CC) {
+      case 50:
+        beatWords.setAlpha(value);
+        break;
+      case 41:
+        if (value > 120) {
+          myBgPalette.incColor();
+          beatWords.nextWord();
+        }
+        break;
+      case 30:
+        myBgPalette.toggle();
+        break;
+      case 46:
+        myBgPalette.toggleBlackOrWhite();
+        break;
+      case 47:
+        beatWords.setCurrentPack(value);
+        break;
+    }
+  }
 
-    if (channel == midiChannel) {
-      try {
-        Class[] cls = new Class[1];
-        cls[0] = int.class;
-        Method handler = this.getClass().getMethod("onCCChange" + number, cls);
-        handler.invoke(this, value);
-      } catch (Exception e) {
-        println("Midi error in control change : number = " + number + ", value = " + value);
-        e.printStackTrace();
+  void handleShaderSettings(int CC, int value) {
+    switch (CC) {
+      case 60:
+        VisShaders.setShader(value);
+        break;
+      case 61:
+        VisShaders.toggleVisShaders();
+        break;
+      case 54:
+        VisShaders.setX(value);
+        break;
+      case 55:
+        VisShaders.setY(value);
+        break;
+    }
+  }
+
+  void handleHotCuesAndPacks(int CC, int value) {
+    DeckSettings[] decks = {deckA, deckB, deckC, deckD};
+    int deckIndex = (CC - 1) % 4; // Calculate deck index based on CC
+    if (CC >= 1 && CC <= 4) {
+      decks[deckIndex].readyHotcue(value);
+    } else if (CC >= 56 && CC <= 59) {
+      if (value > 0) {
+        decks[deckIndex].setPack(value);
       }
     }
   }
@@ -1804,7 +1963,6 @@ public class GiantSpaceRobotVisualizer extends PApplet {
       }
     }
   }
-
 
   public static void main(String[] args) {
     PApplet.main("com.bouzou.packages.giantspacerobotvisualizer.GiantSpaceRobotVisualizer");
