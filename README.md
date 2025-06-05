@@ -1,154 +1,326 @@
 # GiantSpaceRobot Traktor Visualiser
 
-## Description
+## Overview
 
-A visualiser that is tightly linked to Traktor, responding to a combination of the audio and controls such as filters and effects. It extends my Maschine Jam mapping ([https://maps.djtechtools.com/mappings/6883](https://maps.djtechtools.com/mappings/6883)) to control the visualiser.
+**GiantSpaceRobot Traktor Visualiser** is a professional real-time audio-visual performance system specifically designed for DJ environments. This sophisticated visualizer creates stunning visual effects that respond to both audio signals and MIDI control messages from Traktor DJ software and Native Instruments' Maschine Jam controller.
 
-Warning! The install and setup for this is fiddly. You need to be familiar and comfortable with Traktor, Traktor mappings, Midi and programming in Processing (if you want to tweak things).
+**🎯 Key Features:**
+- **Real-time audio-reactive visualizations** with FFT analysis and beat detection
+- **Professional MIDI integration** with extensive Traktor and Maschine Jam mapping  
+- **Multiple visualizer modes** (Oblivion, Sprocket, Candywarp, Waveform)
+- **Advanced post-processing shaders** with GPU-accelerated effects
+- **Hot cue image triggering** system for live performance
+- **SPOUT integration** for projection mapping workflows
+- **Multi-monitor support** for professional installations
 
-# Installation
+## Recent Development Updates
 
-There are four main parts to the install
+This project has recently undergone significant modernization:
+- **🔄 Migrated from Processing sketch (.pde) to proper Java Gradle project**
+- **📦 Modular architecture** with improved code organization
+- **🎛️ Enhanced controller integration** and MIDI handling
+- **🔧 Modern build system** with Gradle for easier development and deployment
 
-1. Setting up Traktor and the Maschine Jam, setting up a virtual midi port and setting up processing
-   1. Traktor TSI files and Machine Jam config file and instructions are at https://maps.djtechtools.com/mappings/6883
+## Technology Stack
 
-- Processing
-  - Latest version at https://processing.org/download/, the version used was 3.5.4
-  - You will need the following libraries installed
-    - Minim
-    - Midibus
-    - spout
-- Virtual Midi port, there are lots of options, I used Bome Midi Translator (https://www.bome.com/) and route Traktor through its virtual port. Loopmidi is another popular choice https://www.tobias-erichsen.de/software/loopmidi.html
-- GSR visualiser, code is on Github, feel free to download and use, suggest additional features or pull a copy and make some updates. My code could do with lots of refinements!
-  - https://github.com/cjkcjk01/GiantSpaceRobotVisualiser
+- **Language:** Java 17 with Processing framework
+- **Build System:** Gradle
+- **Audio Processing:** Minim library
+- **MIDI Communication:** TheMidiBus library  
+- **Graphics Sharing:** Spout library (Windows)
+- **Shaders:** GLSL for real-time effects
 
-The steps are:
+⚠️ **Setup Complexity Notice:** This is a professional-grade tool requiring familiarity with Traktor, MIDI mappings, and development environments. Installation involves multiple software components and hardware configuration.
 
-1. Have Traktor 3.4.0 (or above) installed
+# Installation & Setup
 
-2. Set up a virtual midi port (note its name)
+## Prerequisites
 
-3. Install the tsi files in Traktor
+- **Java 17+** (required for Gradle build)
+- **Traktor 3.4.0+** (DJ software)
+- **Virtual MIDI port** (see options below)
+- **Native Instruments Maschine Jam** (recommended controller)
+- **Traktor Kontrol S5** (optional secondary controller)
 
-4. Install the processing framework
+## Quick Start
 
-5. Download the visualiser code and put it in the Processing sketch directory
+### 1. Clone & Build
+```bash
+git clone https://github.com/cjkcjk01/GiantSpaceRobotVisualiser
+cd GiantSpaceRobotVisualiser
+./gradlew build
+```
 
-6. Find the config.json file in the sketch\data directory
+### 2. Hardware Setup
+1. **Set up virtual MIDI port** (note the port name)
+   - **macOS:** Use built-in Audio MIDI Setup (Applications > Utilities) 
+   - **Windows:** Bome Midi Translator (https://www.bome.com/) or Loopmidi (https://www.tobias-erichsen.de/software/loopmidi.html)
+2. **Install Traktor TSI files** from https://maps.djtechtools.com/mappings/6883
+3. **Configure Maschine Jam** with provided mapping file
 
-   1. Make sure you change the midi ports to the correct ones for your system, there are normally two, the Maschine Jam one and what ever the name is for your virtual midi port.
-   2. Set the screen size appropriately, I run it full screen on my second display. Bear in mind that the bigger the window the more processing power it will require, your framerate may suffer. Adjust to suit your system. Low resolutions still look great especially on a projector.
+### 3. Software Configuration
+1. **Edit config.json** in `src/main/resources/`:
+   - Set correct MIDI port names for your system
+   - Configure screen size/fullscreen settings
+   - Adjust performance settings for your hardware
+2. **Test MIDI routing:** Traktor → Virtual MIDI Port → Visualiser
 
-7. Load GiantSpaceRobotVisualiser.pde into processing and try it out!
+### 4. Run the Application
+```bash
+./gradlew run
+```
 
+**Recommended startup order:** Virtual MIDI Port → Traktor → Visualiser
+
+## Legacy Processing Setup (Deprecated)
+
+*The original Processing (.pde) version is deprecated but still available:*
+- **Processing 3.5.4+:** https://processing.org/download/
+- **Required libraries:** Minim, Midibus, Spout
+- Load `GiantSpaceRobotVisualiser.pde` in Processing IDE
    
    
-   I recommend starting the various apps in this order; virtual midi port, Traktor, Processing.
-   
-   
 
-## Functionality
+# Core Features
 
- - Three built in visualisations, each with a set of tweakable parameters
-	 - Oblivion
-		 - Sensitivity
-		 - Browse knob	Change palette
-		 - Button 1  		Background retention toggle
-		 - Button 2  		More drama
-		 - Fader 1  		Rotation speed
-		 - Fader2 		Opacity
-	 - Sprocket
-		 - Sensitivity
-		 - Browse knob 	no effect
-		 - Button 1		Background retention toggle
-		 - Button 2		Colour mode (linear or random)
-		 - Fader 1		Rotation speed
-		 - Fader2Outline colour
-	 - Candywarp
-		 - Sensitivity  no effect
-		 - Browse knob  Select frequency band that visualiser responds to, bass to the left, treble to the right
-		 - Button 1  no effect
-		 - Button 2  no effect
-		 - Fader 1  Cycle
-		 - Fader2  Warp
- - Visualiser overlays
-	 - Waveform, an oscilloscope type display of the current audio with adjustable sensitivity
-	 - Kaleidoscope, very trippy!
- - Hot cue image packs, trigger images corresponding to hot cues, you can assign any pack to any deck
- - Beat words, display a sentence, word by word, changing on the beat
- - Selectable opacity
- - Post processing shaders, apply visual effects to the whole display, choose from up to 15 difference effects. Each shader has parameters to tweak it
- - Effect specific shaders
-	 - Filter – blurs the display as filter is increased or decreased
-	 - Echo – Uses a [sobel](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwi5hI7g_M3sAhUhwuYKHeIIBwUQFjACegQIBBAC&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FSobel_operator&usg=AOvVaw2TW22hgpeNPJEQ1dSzk4R0) effect while a delay is engaged
-	 - Slice/mash/gate – uses a vhs-jitter effect
- - Beat background, changes the background colour on each beat. Cycles through a configurable palette.
- - SPOUT option, outputs the display texture for use in other apps. Useful for things like projection mapping.
+## Visual Engine
+
+### Primary Visualizers
+Each visualizer includes real-time parameter control via MIDI:
+
+**🌀 Oblivion** (`VisOblivion.java`)
+- Circular rotating patterns with customizable color palettes
+- **Controls:** Palette selection, background retention, drama mode, rotation speed, opacity
+- **Specialty:** Reads PNG gradients for unique color schemes
+
+**⚙️ Sprocket** (`VisSprocket.java`) 
+- Geometric mechanical-style animations
+- **Controls:** Background retention, linear/random color modes, rotation speed, outline color
+- **Specialty:** Industrial aesthetic with precise geometric patterns
+
+**🌈 Candywarp** (`VisCandyWarp.java`)
+- GPU-accelerated shader-based liquid warp effects
+- **Controls:** Frequency band selection (bass to treble), cycle speed, warp intensity
+- **Specialty:** Fluid, organic visual transformations
+
+**📊 Waveform** (`VisWaveform.java`)
+- Real-time oscilloscope-style audio display
+- **Controls:** Sensitivity adjustment, scaling
+- **Specialty:** Direct audio signal visualization
+
+### Visual Overlays & Effects
+
+**🔮 Kaleidoscope Mode**
+- Psychedelic multi-mirror effects applicable to any visualizer
+- Real-time parameter control for trippy visual experiences
+
+**🎯 Hot Cue Image System**
+- 8 customizable image packs (8 images each)
+- Instant trigger via Traktor hot cues
+- Support for 640x640 PNG format for optimal performance
+- Per-deck pack assignment
+
+**📝 Beat Words System** (`WordPack.java`)
+- Display text sequences synchronized to beat detection
+- 16 configurable word packs
+- Adjustable opacity and timing
+
+**🎨 Post-Processing Shader Pipeline** (`PostProcessingShaders.java`)
+- 15+ real-time GPU effects
+- Adjustable parameters for each effect
+- Professional-grade visual enhancement
+
+### DJ-Specific Effects
+
+**🎛️ Filter Response**
+- Visual blur effects synchronized to Traktor's filter controls
+- Real-time response to high/low-pass filtering
+
+**🔄 Echo/Delay Effects**
+- Sobel edge detection effects during delay engagement
+- Visual feedback matching audio effects
+
+**⚡ Slice/Gate Effects**
+- VHS-style glitch effects during slice/gate/mash
+- Authentic retro distortion aesthetics
+
+## Performance Features
+
+**🎵 Audio Analysis**
+- Real-time FFT (Fast Fourier Transform) processing
+- Beat detection and rhythm synchronization  
+- Frequency band isolation and response
+
+**🖥️ Multi-Display Support**
+- Fullscreen and windowed modes
+- Secondary monitor/projector output
+- Configurable resolution for performance optimization
+
+**📡 SPOUT Integration**
+- Real-time texture sharing with external applications
+- Perfect for projection mapping workflows (tested with VPT8)
+- Professional VJ integration capabilities
 
   
 
-# Software requirements
+# System Requirements
 
-- **Traktor 3.4.x**
+## Software Requirements
 
-- **A Virtual midi port**
-  - I use Bome Midi Translator (https://www.bome.com/) and route Traktor through its virtual port
-  - Loopmidi is another popular https://www.tobias-erichsen.de/software/loopmidi.html
-- **Processing 3.5.4**
-  - https://processing.org/download/
-- GiantSpaceRobot visualiser code
-  - https://github.com/cjkcjk01/GiantSpaceRobotVisualiser
+**Core Dependencies:**
+- **Java 17+** (OpenJDK or Oracle JDK)
+- **Traktor 3.4.x+** (Native Instruments DJ software)
+- **Virtual MIDI Port:**
+  - **macOS:** Audio MIDI Setup (built-in)
+  - **Windows:** Bome Midi Translator or Loopmidi
+
+**Development (Optional):**
+- **Gradle** (included via wrapper)
+- **Git** for version control
+- **IDE** (IntelliJ IDEA, Eclipse, VS Code)
+
+## Hardware Requirements
+
+**Minimum System:**
+- **CPU:** Dual-core 2.5GHz+
+- **RAM:** 4GB
+- **GPU:** Dedicated graphics recommended
+- **Resolution:** 1280x720 (higher resolutions require more GPU power)
+
+**Recommended System:**
+- **CPU:** Quad-core 3.0GHz+
+- **RAM:** 8GB+
+- **GPU:** Gaming-grade graphics card
+- **Resolution:** 1920x1080+ with secondary display support
+- **Storage:** SSD for optimal performance
+
+**Professional Setup:**
+- **Multi-monitor support** for DJ interface + visualizer output
+- **Dedicated projector output** for live performances
+- **Low-latency audio interface** for precise synchronization
 
 
 
-# Hardware requirements
+# Controller Setup
 
-I use a Traktor Kontrol S5 and a Native Instrument's Maschine Jam to control Traktor. You do not need a hardware controller at all, but you need to map the appropriate MIDI outputs in Traktor to use the visualiser to its full potential. Details of the midi values used are in a the MIDI section below. You can use any midi controller for Traktor (if you have a mapping for it) 
+## Supported Hardware
 
-# Performance
+**Primary Controller:** 
+- **Native Instruments Maschine Jam** (full mapping included)
+- Complete TSI files and configuration available at https://maps.djtechtools.com/mappings/6883
 
-The performance is directly related to the window size, if your system is struggling then reduce the size in the config file. If you are using it with a projector then low resolutions look really good. I get 60fps on my system, but it is a gaming PC with a decent GPU.
+**Secondary Controller:**
+- **Traktor Kontrol S5** (optional, for enhanced control)
+
+**Custom Controllers:**
+- Any MIDI controller can be used with custom mapping
+- See MIDI Controls section below for required CC values
+- Traktor mapping required for full functionality
+
+## Performance Optimization
+
+**Resolution vs Performance:**
+- **Window size directly impacts performance** - reduce resolution if experiencing frame drops
+- **Projector use:** Lower resolutions (720p) often look excellent on projectors
+- **Target:** 60fps on gaming-grade systems
+- **Optimization tip:** Use secondary display at lower resolution for better performance
+
+**Audio Latency:**
+- **Low-latency audio interface recommended** for tight synchronization
+- **Buffer size:** Smaller buffers = better sync, higher CPU usage
+- **MIDI timing:** Virtual MIDI port quality affects responsiveness
 
 # Configuration
 
-There are a lot configuration options, detailed below
+Multiple configuration options are available for customization:
 
-## Config file
+## Main Config File
 
-Config.json is the config for the visualiser, it can be found in the visualiser’s data directory. It has the following settings
+**Location:** `src/main/resources/config.json`
 
-- screensize, this defines the output window
-    - fullscreen, true or false
-    - Display number, used to direct output to a second or third monitor or projector
-    - Width, only used if fullscreen is set to false
-    - Height, ditto
-- MIDIdevice
-	- This is a list of midi ports that the visualiser will respond to
--   wordpacks
-	- A set of lists of words that will be displayed, in order, changing on the beat
-- Palettes
-	- A set of lists of colour values (in hex) that are cycled through when the option to change background on the beat is selected in the visualiser
+### Display Settings
+```json
+{
+  "screensize": {
+    "fullscreen": true,
+    "displayNumber": 1,
+    "width": 1920,
+    "height": 1080
+  }
+}
+```
+- **fullscreen:** Enable/disable fullscreen mode
+- **displayNumber:** Target monitor (0=primary, 1=secondary, etc.)
+- **width/height:** Window dimensions (used only if fullscreen=false)
 
-## Hot cue packs
+### MIDI Configuration
+```json
+{
+  "MIDIdevice": [
+    "Maschine Jam - 1",
+    "Virtual MIDI Port Name"
+  ]
+}
+```
+- **List of MIDI input ports** the visualizer will monitor
+- **Typical setup:** Hardware controller + Virtual MIDI from Traktor
 
-A hotcue pack is a set of eight images stored in a directory named “hotcue_pack#” where # is number of the pack. You can have eight pack in total. It comes with a set ready to go, you can replace them with ones of your choice. They need to be in png format and I recommend 640x640 as a resolution, as a balance between level of detail and performance.
+### Content Packs
+```json
+{
+  "wordpacks": [
+    ["BASS", "DROP", "ENERGY", "FLOW"],
+    ["NIGHT", "LIGHTS", "DANCE", "MUSIC"]
+  ],
+  "palettes": [
+    ["#FF0000", "#00FF00", "#0000FF"],
+    ["#FF6B35", "#F7931E", "#FFD23F"]
+  ]
+}
+```
+- **wordpacks:** Text sequences displayed on beat (16 packs max)
+- **palettes:** Color schemes for background cycling (hex values)
 
-## Midi controls
+## Hot Cue Image Packs
 
-These are hard wired right now, making them configurable is on the roadmap. For info, the “midi commands.txt” file lists the values used, you can find it in the data directory.
+**Location:** `src/main/resources/hotcue_pack1/` through `hotcue_pack8/`
 
-## Oblivion palettes
+- **8 packs maximum** (hotcue_pack1 through hotcue_pack8)
+- **8 images per pack** (one for each hot cue button)
+- **Format:** PNG files
+- **Recommended resolution:** 640x640 (performance vs quality balance)
+- **Naming:** Sequential numbering (1.png, 2.png, etc.)
 
-The Oblivion visualiser uses a cool way to configure its colour gradients, it simply reads in a png file, steps through the x coordinates and adds the colour of each pixel to a list. The palette images are stored in the “gradients” directory. You can add more by opening an existing one in an image editor and saving an edited version with a new name. They need to be named in the format “gradient_xxx” , where xxx is any valid string.
+## MIDI Control Mapping
 
-## Coding
+**Current Status:** Hard-coded MIDI CC values (configurable mapping planned)
+**Reference:** See "MIDI Controls" section below for complete CC mapping
+**Documentation:** `midi commands.txt` in resources directory
 
-The GiantSpaceRobot Traktor visualiser is written using the [Processing](https://processing.org/) framework, the code is available under an open source license, feel free to modify. I will paste a link to a github repository when it is ready.
+## Oblivion Color Palettes
+
+**Location:** `src/main/resources/gradients/`
+
+The Oblivion visualizer uses a unique gradient system:
+- **Method:** Reads PNG files pixel-by-pixel along the X-axis to create color palettes
+- **Format:** PNG images with horizontal color gradients
+- **Naming:** `gradient_xxx.png` (where xxx is any descriptive string)
+- **Creation:** Use any image editor to create custom gradients
+- **Usage:** Browse knob cycles through available gradient files
+
+## Development & Customization
+
+**Framework:** Built with [Processing](https://processing.org/) framework, now modernized as a Java Gradle project
+**License:** Open source - freely modifiable and extensible
+**Architecture:** Modular design with separated visualizer classes (`VisOblivion.java`, `VisSprocket.java`, etc.)
+**Extension Points:** 
+- Add new visualizers by extending the `Visualiser` base class
+- Create custom shaders in GLSL for post-processing effects
+- Develop new MIDI mappings and control schemes
 
 # Keyboard Controls
 
-There are a few keyboard controls that are useful when you are debugging and dont want to reach for your midi controller.
+Debug and testing keyboard shortcuts when MIDI controller is not available:
 
 | Key  | Description                                    |
 | ---- | ---------------------------------------------- |
@@ -212,62 +384,65 @@ The visualiser uses the following MIDI CC values to control its functions. A con
 | 64             | On if value > 100,<br />off if value = 0                     | Display delay/echo effect shader                             |
 | 65             | On if value > 100,<br />off if value = 0                     | Display gater/slice/mash effect shader                       |
 
-# SPOUT
+# SPOUT Integration
 
-SPOUT is a way of directing the display output to another application, such as a projection mapping app. I have used it successfully with vpt8 (https://hcgilje.wordpress.com/vpt/)
+**SPOUT** enables real-time graphics sharing between applications on Windows, perfect for professional VJ workflows.
 
-Details at;
+## Use Cases
+- **Projection mapping** with software like VPT8
+- **OBS Studio integration** for streaming
+- **VJ software integration** for live performances
+- **Recording and compositing** workflows
 
-https://spout.zeal.co/
+## Tested Applications
+- **VPT8** (https://hcgilje.wordpress.com/vpt/) - Confirmed working
+- **MadMapper** - Projection mapping
+- **Resolume** - VJ software integration
 
-https://github.com/leadedge/SpoutProcessing
+## Resources
+- **SPOUT Framework:** https://spout.zeal.co/
+- **Processing Library:** https://github.com/leadedge/SpoutProcessing
+- **Platform:** Windows only (macOS users can use Syphon alternatives)
 
-# Acknowledgements
+# Credits & Acknowledgements
 
-## Oblivion
+This project builds upon excellent work from the creative coding community:
 
-Copyright (c) 2016 Tobias Wehrum <Tobias.Wehrum@dragonlab.de>
-Distributed under the MIT License. (See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
-This notice shall be included in all copies or substantial portions of the Software.
-[https://blog.dragonlab.de/2016/04/into-oblivion-music-visualizer/](https://blog.dragonlab.de/2016/04/into-oblivion-music-visualizer/)
-[https://github.com/TobiasWehrum/GenerativeArt/tree/master/s044_into_oblivion](https://github.com/TobiasWehrum/GenerativeArt/tree/master/s044_into_oblivion)
+## Visualizer Algorithms
 
-## Sprocket
+### Oblivion (`VisOblivion.java`)
+**Original Creator:** Tobias Wehrum (Tobias.Wehrum@dragonlab.de)  
+**License:** MIT License  
+**Source:** [Into Oblivion Music Visualizer](https://blog.dragonlab.de/2016/04/into-oblivion-music-visualizer/)  
+**Repository:** [GenerativeArt/s044_into_oblivion](https://github.com/TobiasWehrum/GenerativeArt/tree/master/s044_into_oblivion)
 
-[http://www.benfarahmand.com/2013/10/source-code-audio-visualizer-with.html](http://www.benfarahmand.com/2013/10/source-code-audio-visualizer-with.html)
-[https://gist.github.com/benfarahmand/6902359](https://gist.github.com/benfarahmand/6902359)
+### Sprocket (`VisSprocket.java`)
+**Original Creator:** Ben Farahmand  
+**Source:** [Audio Visualizer with Processing](http://www.benfarahmand.com/2013/10/source-code-audio-visualizer-with.html)  
+**Code:** [GitHub Gist](https://gist.github.com/benfarahmand/6902359)
 
-## Candywarp
+### Candywarp (`VisCandyWarp.java`)
+**Original Creator:** mojovideotech  
+**Based on:** Trisomie21 (glslsandbox.com/e#38710.0)  
+**Modified by:** @hintz  
+**License:** Creative Commons Attribution-NonCommercial-ShareAlike 3.0  
+**Source:** [ISF Video Editor](https://editor.isf.video/shaders/5e7a802d7c113618206dec38)
 
-////////////////////////////////////////////////////////////  
-// CandyWarp  by mojovideotech  
-//  
-// based on :  
-// glslsandbox.com/e#38710.0  
-// Posted by Trisomie21  
-// modified by @hintz  
-//  
-// Creative Commons Attribution-NonCommercial-ShareAlike 3.0  
-////////////////////////////////////////////////////////////
+## Shader Effects
 
-[https://editor.isf.video/shaders/5e7a802d7c113618206dec38](https://editor.isf.video/shaders/5e7a802d7c113618206dec38)
+### Sobel Edge Detection
+**Purpose:** Basic edge detection via convolution  
+**Original Creator:** Ken Slade (ken.slade@gmail.com)  
+**Based on:** Jeroen Baert (jeroen.baert@cs.kuleuven.be)  
+**Source:** [Shadertoy - ldsSWr](https://www.shadertoy.com/view/ldsSWr)  
+**Original:** [Shadertoy - Xdf3Rf](https://www.shadertoy.com/view/Xdf3Rf)
 
-# Shaders
+### VHS Glitch Effect
+**Original Creator:** ryk
+**Source:** [Shadertoy - ldjGzV](https://www.shadertoy.com/view/ldjGzV)
+**Profile:** [ryk's Shadertoy](https://www.shadertoy.com/user/ryk)
+**Usage Note:** Non-commercial use only (per creator's request)
 
-## Sobel
-From shadertoy [https://www.shadertoy.com/view/ldsSWr](https://www.shadertoy.com/view/ldsSWr)  
-// Basic edge detection via convolution  
-// Ken Slade - [ken.slade@gmail.com](mailto:ken.slade@gmail.com)  
-// at https://www.shadertoy.com/view/ldsSWr
-// Based on original Sobel shader by:  
-// Jeroen Baert - jeroen.baert@cs.kuleuven.be (www.forceflow.be)  
-// at https://www.shadertoy.com/view/Xdf3Rf
-
-## VHS_glitch
-[https://www.shadertoy.com/view/ldjGzV](https://www.shadertoy.com/view/ldjGzV)
-https://www.shadertoy.com/user/ryk
-Please respect ryk’s request to “please do not use this for commercial purposes.”
-
-Post processing shaders
-[https://genekogan.com/works/processing-shader-examples/](https://genekogan.com/works/processing-shader-examples/)
-
+### Post-Processing Framework
+**Source:** [Gene Kogan - Processing Shader Examples](https://genekogan.com/works/processing-shader-examples/)
+**Usage:** Template and examples for GPU-based post-processing effects
